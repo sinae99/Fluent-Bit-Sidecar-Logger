@@ -118,7 +118,11 @@ In **Stack Management → Data Views**, create:
 
 Use `@timestamp` as the time field. Open **Discover**, select the data view, and wait for a new log record.
 
-## Elasticsearch logs
+
+---
+## If your logs need parsing
+
+### Elasticsearch logs
 
 Fluent Bit sends the raw application line in `message`. If the app writes JSON, `message` looks like this:
 
