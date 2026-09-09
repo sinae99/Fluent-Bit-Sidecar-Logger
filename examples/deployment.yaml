@@ -1,0 +1,65 @@
+# Sample Deployment: app container + Fluent Bit sidecar
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-app
+  labels:
+    app: sample-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+    spec:
+      containers:
+        # ── Your application ──────────────────────────────────────────────
+        - name: sample-app
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          # App logs to stdout/stderr by default — no changes needed.
+          # Example: generate traffic with `kubectl port-forward` and curl.
+
+          
+
+        # ── Fluent Bit sidecar ──────────────────────────────────────────
+        - name: fluent-bit
+          image: fluent/fluent-bit:3.2.4
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0        # required — node log files are root-owned
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          envFrom:
+            - secretRef:
+                name: sidecar-logger-elasticsearch
+          volumeMounts:
+            - name: varlogcontainers
+              mountPath: /var/log/containers
+              readOnly: true
+            - name: varlogpods
+              mountPath: /var/log/pods
+              readOnly: true
+            - name: fluent-bit-config
+              mountPath: /fluent-bit/etc/fluent-bit.conf
+              subPath: fluent-bit.conf
+
+      volumes:
+        - name: varlogcontainers
+          hostPath:
+            path: /var/log/containers
+        - name: varlogpods
+          hostPath:
+            path: /var/log/pods
+        - name: fluent-bit-config
+          configMap:
+            name: fluent-bit-config

@@ -1,0 +1,6 @@
+# Never commit local credentials or generated files.
+*.env
+*.env.*
+*-secret.local.yaml
+*-secret.local.yml
+.DS_Store
